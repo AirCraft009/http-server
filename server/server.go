@@ -49,28 +49,35 @@ func (s *Server) AcceptConnections() {
 }
 
 func handleConnection(conn net.Conn, s *Server) {
-	//min size for header 20B max 60B
-	header := make([]byte, maxHeaderSize)
-	//n is the ammount of bytes that are relevant so only header[n:] is important!!
-	n, err := conn.Read(header)
-	if err != nil {
-		fmt.Printf("Error reading header: %s\nerr: %s\n", conn, err.Error())
-	}
-	//read everything up to n (inklusive)
-	//fmt.Println(string(header[:n]))
-	req, _ := parser.ParseRequest(string(header[:n]))
-	fmt.Println(req)
-	s.sendString(baseResponse, conn)
-	defer func(conn net.Conn) {
-		err := conn.Close()
+	//this does not work Ich bin dummmmmmmmm
+	//the base state is keep alive so it infinetly loops
+	for {
+		//min size for header 20B max 60B
+		message := make([]byte, maxHeaderSize)
+		//n is the ammount of bytes that are relevant so only header[n:] is important!!
+		n, err := conn.Read(message)
+		if err != nil {
+			fmt.Printf("Error reading header: %s\n", err.Error())
+		}
+		//read everything up to n (inklusive)
+		//fmt.Println(string(header[:n]))
+		req, err := parser.ParseRequest(message[:n])
 		checkErorr(err)
-	}(conn)
+		s.sendString(baseResponse, conn)
+		if !(req.HTTPType == "HTTP/1.0" || req.Headers["Connection"] == "close") {
+			continue
+		}
+		defer func(conn net.Conn) {
+			err := conn.Close()
+			checkErorr(err)
+		}(conn)
+		break
+	}
 }
 
 func (s *Server) sendString(html string, conn net.Conn) {
 	_, err := conn.Write([]byte(html))
 	checkErorr(err)
-	select {}
 }
 
 func (s *Server) Close() {

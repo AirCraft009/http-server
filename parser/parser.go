@@ -11,30 +11,35 @@ type Request struct {
 	Path     string
 	HTTPType string
 	Headers  map[string]string
-	Params   []string
-	Id       string
 	Body     []byte
 }
 
-func NewRequest(method, path, id, HTTPType string, headers map[string]string, params []string, body []byte) *Request {
-	return &Request{method, path, HTTPType, headers, params, id, body}
+func NewRequest(method, path, HTTPType string, headers map[string]string, body []byte) *Request {
+	return &Request{method, path, HTTPType, headers, body}
 }
 
-func ParseRequest(req string) (*Request, error) {
-	fmt.Println(req)
+func ParseRequest(byteReq []byte) (*Request, error) {
+	req := string(byteReq)
 	if len(req) == 0 {
 		return nil, errors.New("empty request")
 	}
+	/**\r\n is an empty line and marks the body
+	because the header only uses ascii it perfectly matches up with a byte arrray.
+	Now I can pinpoint the start of the body which should stay in []byte format because
+	it could be a file like an image or pdf.
+	*/
+	headerlen := strings.Index(req, "\r\n\r\n")
+	fmt.Println(headerlen)
 	lines := strings.Split(strings.ReplaceAll(req, "\n", ""), "\r")
 	word := strings.Split(lines[0], " ")
 	//GET /request HTTP/1.1
 	//this parses the first line correctly
-	fmt.Println(word)
 	Method := word[0]
 	Path := word[1]
 	Http := word[2]
 	headers := parseHeaders(lines[1:])
-	return &Request{Method: Method, Path: Path, HTTPType: Http, Headers: headers}, nil
+
+	return NewRequest(Method, Path, Http, headers, byteReq[headerlen:]), nil
 }
 
 func parseHeaders(headers []string) (out map[string]string) {
