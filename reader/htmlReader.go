@@ -1,18 +1,22 @@
 package reader
 
 import (
+	"errors"
 	"os"
 )
 
-func check(e error) {
-	if e != nil {
-		panic(e)
+func isExistingFile(filename string) bool {
+	_, err := os.Stat(filename)
+	if errors.Is(err, os.ErrNotExist) {
+		return false
 	}
+	return true
 }
 
 func ReadFile(filePath string) []byte {
-
 	dat, err := os.ReadFile(filePath)
-	check(err)
+	if errors.Is(err, os.ErrNotExist) {
+		return make([]byte, 0)
+	}
 	return dat
 }

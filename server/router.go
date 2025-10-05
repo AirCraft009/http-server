@@ -8,13 +8,6 @@ import (
 	"strings"
 )
 
-type Response struct {
-	StatusCode int
-	HTTPType   string
-	Headers    map[string]string
-	Body       []byte
-}
-
 type Router struct {
 	// routes Method -> route -> Handler
 	routes map[string]map[string]Handler
@@ -42,7 +35,11 @@ func (r *Router) Handle(Method, path string, handler Handler) {
 func (r *Router) useRoute(route string, req *parser.Request) *Response {
 	rawPath, queryMap := parseQuery(route)
 	req.Querys = queryMap
-	return r.routes[req.Method][rawPath](req)
+	handler, ok := r.routes[req.Method][rawPath]
+	if !ok {
+		return Http404Handler(req)
+	}
+	return handler(req)
 }
 
 func parseQuery(path string) (string, map[string]string) {

@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"http-server/handlers"
 	"http-server/parser"
 	"io"
 	"net"
@@ -22,6 +21,13 @@ type Server struct {
 	port     int
 	listener net.Listener
 	router   *Router
+}
+
+type Response struct {
+	StatusCode int
+	HTTPType   string
+	Headers    map[string]string
+	Body       []byte
 }
 
 func checkErorr(err error) {
@@ -72,9 +78,6 @@ func handleConnection(conn net.Conn, s *Server) {
 		req, err := parser.ParseRequest(message[:n])
 		checkErorr(err)
 		response := s.router.useRoute(req.Path, req)
-		if response == nil {
-			response = handlers.Http404Handler
-		}
 		_, err = conn.Write(formatResponse(response))
 		if err != nil {
 			return
@@ -97,6 +100,15 @@ func (s *Server) sendString(html string, conn net.Conn) {
 
 func (s *Server) Handle(Method, path string, handler Handler) {
 	s.router.Handle(Method, path, handler)
+}
+
+// AddFileSystem
+/**
+this method adds a folder and all folders under it to the filesystem of the server
+any requests the go from the basepath to any file in the system using a get Request can get pulled
+*/
+func (s *Server) AddFileSystem(folderPath string) {
+
 }
 
 func (s *Server) Close() {
