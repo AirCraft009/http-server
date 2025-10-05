@@ -16,7 +16,7 @@ func Http404Handler(req *parser.Request) (res *Response) {
 	res.Headers = make(map[string]string)
 	res.Headers["Content-Type"] = "text/html; charset=utf-8"
 	res.Headers["Connection"] = "keep-alive"
-	data, err := reader.ReadFile(req.SourceFolder + "404.html")
+	data, err := reader.ReadFile(req.SourceFolder + "/404.html")
 	if err != nil {
 		res.StatusCode = http.StatusBadRequest
 		res.Body = []byte("So bad that even 404 doesn't work")
