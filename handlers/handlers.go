@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"http-server/parser"
+	"http-server/reader"
 	"http-server/server"
 	"net/http"
 	"strconv"
@@ -26,5 +27,8 @@ func Http404Handler(req *parser.Request) (res *server.Response) {
 	res.Headers = make(map[string]string)
 	res.Headers["Content-Type"] = "text/html; charset=utf-8"
 	res.Headers["Connection"] = "close"
-	res.Body = []byte()
+	data := reader.ReadFile("frontend/404.html")
+	res.Body = data
+	res.Headers["Content-Lenght"] = strconv.Itoa(len(res.Body))
+	return res
 }
