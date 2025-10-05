@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"http-server/parser"
 	"http-server/reader"
 	"mime"
@@ -38,7 +37,6 @@ func StreamHandler(req *parser.Request) (res *Response) {
 		ctype = "application/octet-stream"
 	}
 	res = NewResponse(req)
-	fmt.Println(ctype)
 	res.Headers["Content-Type"] = ctype
 	res.Headers["Connection"] = "close"
 	data, err := reader.ReadFile(req.SourceFolder + req.Path)

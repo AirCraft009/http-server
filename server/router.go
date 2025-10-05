@@ -48,12 +48,12 @@ func (r *Router) useRoute(route string, req *parser.Request) *Response {
 }
 
 func parseQuery(path string) (string, map[string]string) {
-	querys := strings.Split(path, "&")
+	querys := strings.Split(path, "?")
 	path = querys[0]
-	if len(querys) <= 1 {
+	if len(querys) != 2 {
 		return path, nil
 	}
-	querys = querys[1:]
+	querys = strings.Split(querys[1], "&")
 	queryMap := make(map[string]string)
 	for _, query := range querys {
 		keyValue := strings.Split(query, "=")
