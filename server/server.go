@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -108,7 +109,16 @@ this method adds a folder and all folders under it to the filesystem of the serv
 any requests the go from the basepath to any file in the system using a get Request can get pulled
 */
 func (s *Server) AddFileSystem(folderPath string) {
-
+	if strings.HasSuffix(folderPath, "/") {
+		folderPath = folderPath[:len(folderPath)-1]
+	}
+	s.router.sourceFolder = folderPath
+	files := listFiles(folderPath)
+	for _, file := range files {
+		file = strings.Replace(file, folderPath, "", 1)
+		file = strings.ReplaceAll(file, "\\", "/")
+		s.router.Handle("GET", file, StreamHandler)
+	}
 }
 
 func (s *Server) Close() {

@@ -12,12 +12,13 @@ type Request struct {
 	Headers  map[string]string
 	Body     []byte
 	//field that will only be filled later
-	Querys map[string]string
+	Querys       map[string]string
+	SourceFolder string
 }
 
 func NewRequest(method, path, HTTPType string, headers map[string]string, body []byte) *Request {
 	//currently all queries are in the path variable of the request they will be parsed later
-	return &Request{method, path, HTTPType, headers, body, nil}
+	return &Request{method, path, HTTPType, headers, body, nil, ""}
 }
 
 func ParseRequest(byteReq []byte) (*Request, error) {

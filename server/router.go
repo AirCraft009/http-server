@@ -10,7 +10,8 @@ import (
 
 type Router struct {
 	// routes Method -> route -> Handler
-	routes map[string]map[string]Handler
+	routes       map[string]map[string]Handler
+	sourceFolder string
 }
 
 func NewRouter() *Router {
@@ -18,7 +19,7 @@ func NewRouter() *Router {
 }
 
 func NewResponse(req *parser.Request) *Response {
-	return &Response{HTTPType: req.HTTPType}
+	return &Response{HTTPType: req.HTTPType, Headers: make(map[string]string)}
 }
 
 type Handler func(request *parser.Request) *Response
@@ -35,6 +36,8 @@ func (r *Router) Handle(Method, path string, handler Handler) {
 func (r *Router) useRoute(route string, req *parser.Request) *Response {
 	rawPath, queryMap := parseQuery(route)
 	req.Querys = queryMap
+	req.Path = rawPath
+	req.SourceFolder = r.sourceFolder
 	handler, ok := r.routes[req.Method][rawPath]
 	if !ok {
 		return Http404Handler(req)
