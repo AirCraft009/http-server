@@ -2,7 +2,9 @@ package server
 
 import (
 	"fmt"
+	"http-server/handlers"
 	"http-server/parser"
+	"io"
 	"net"
 	"strconv"
 )
@@ -10,6 +12,8 @@ import (
 const (
 	maxHeaderSize = 1024
 	baseResponse  = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello"
+	httpType0     = "HTTP/1.0"
+	httpType1     = "HTTP/1.1"
 )
 
 // Server
@@ -17,6 +21,7 @@ const (
 type Server struct {
 	port     int
 	listener net.Listener
+	router   *Router
 }
 
 func checkErorr(err error) {
@@ -26,7 +31,7 @@ func checkErorr(err error) {
 }
 
 func NewServer(port int) *Server {
-	return &Server{port, net.Listener(nil)}
+	return &Server{port, net.Listener(nil), NewRouter()}
 }
 
 func (s *Server) Listen() {
@@ -49,21 +54,31 @@ func (s *Server) AcceptConnections() {
 }
 
 func handleConnection(conn net.Conn, s *Server) {
-	//this does not work Ich bin dummmmmmmmm
-	//the base state is keep alive so it infinetly loops
+	//loops because keep alive is the standard so if it's not changed and there isn't a EOF
+	//End Of File then it just continues
 	for {
 		//min size for header 20B max 60B
 		message := make([]byte, maxHeaderSize)
 		//n is the ammount of bytes that are relevant so only header[n:] is important!!
 		n, err := conn.Read(message)
-		if err != nil {
-			fmt.Printf("Error reading header: %s\n", err.Error())
+		//break at EOF because it means the clien terminated the connection
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			checkErorr(err)
 		}
 		//read everything up to n (inklusive)
 		//fmt.Println(string(header[:n]))
 		req, err := parser.ParseRequest(message[:n])
 		checkErorr(err)
-		s.sendString(baseResponse, conn)
+		response := s.router.useRoute(req.Path, req)
+		if response == nil {
+			response = handlers.Http404Handler
+		}
+		_, err = conn.Write(formatResponse(response))
+		if err != nil {
+			return
+		}
 		if !(req.HTTPType == "HTTP/1.0" || req.Headers["Connection"] == "close") {
 			continue
 		}
@@ -78,6 +93,10 @@ func handleConnection(conn net.Conn, s *Server) {
 func (s *Server) sendString(html string, conn net.Conn) {
 	_, err := conn.Write([]byte(html))
 	checkErorr(err)
+}
+
+func (s *Server) Handle(Method, path string, handler Handler) {
+	s.router.Handle(Method, path, handler)
 }
 
 func (s *Server) Close() {

@@ -2,7 +2,6 @@ package parser
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -12,10 +11,13 @@ type Request struct {
 	HTTPType string
 	Headers  map[string]string
 	Body     []byte
+	//field that will only be filled later
+	Querys map[string]string
 }
 
 func NewRequest(method, path, HTTPType string, headers map[string]string, body []byte) *Request {
-	return &Request{method, path, HTTPType, headers, body}
+	//currently all queries are in the path variable of the request they will be parsed later
+	return &Request{method, path, HTTPType, headers, body, nil}
 }
 
 func ParseRequest(byteReq []byte) (*Request, error) {
@@ -29,7 +31,6 @@ func ParseRequest(byteReq []byte) (*Request, error) {
 	it could be a file like an image or pdf.
 	*/
 	headerlen := strings.Index(req, "\r\n\r\n")
-	fmt.Println(headerlen)
 	lines := strings.Split(strings.ReplaceAll(req, "\n", ""), "\r")
 	word := strings.Split(lines[0], " ")
 	//GET /request HTTP/1.1
@@ -38,7 +39,6 @@ func ParseRequest(byteReq []byte) (*Request, error) {
 	Path := word[1]
 	Http := word[2]
 	headers := parseHeaders(lines[1:])
-
 	return NewRequest(Method, Path, Http, headers, byteReq[headerlen:]), nil
 }
 

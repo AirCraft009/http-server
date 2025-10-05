@@ -1,6 +1,7 @@
 package main
 
 import (
+	"http-server/handlers"
 	"http-server/server"
 )
 
@@ -9,6 +10,7 @@ import (
 
 func main() {
 	httpServer := server.NewServer(8080)
+	httpServer.Handle("GET", "/", handlers.Homehandler)
 	httpServer.Listen()
 	httpServer.AcceptConnections()
 }
