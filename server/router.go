@@ -9,13 +9,13 @@ import (
 )
 
 type Router struct {
-	// routes Method -> route -> Handler
-	routes       map[string]map[string]Handler
+	// Routes Method -> route -> Handler
+	Routes       map[string]map[string]Handler
 	sourceFolder string
 }
 
 func NewRouter() *Router {
-	return &Router{routes: make(map[string]map[string]Handler)}
+	return &Router{Routes: make(map[string]map[string]Handler)}
 }
 
 func NewResponse(req *parser.Request) *Response {
@@ -29,8 +29,10 @@ type Handler func(request *parser.Request) *Response
 sets a route in the router but doesn't support spaces in the path
 */
 func (r *Router) Handle(Method, path string, handler Handler) {
-	r.routes[Method] = make(map[string]Handler)
-	r.routes[Method][path] = handler
+	if r.Routes[Method] == nil {
+		r.Routes[Method] = make(map[string]Handler)
+	}
+	r.Routes[Method][path] = handler
 }
 
 func (r *Router) useRoute(route string, req *parser.Request) *Response {
@@ -38,7 +40,7 @@ func (r *Router) useRoute(route string, req *parser.Request) *Response {
 	req.Querys = queryMap
 	req.Path = rawPath
 	req.SourceFolder = r.sourceFolder
-	handler, ok := r.routes[req.Method][rawPath]
+	handler, ok := r.Routes[req.Method][rawPath]
 	if !ok {
 		return Http404Handler(req)
 	}

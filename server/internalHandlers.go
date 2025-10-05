@@ -40,7 +40,7 @@ func StreamHandler(req *parser.Request) (res *Response) {
 	res = NewResponse(req)
 	fmt.Println(ctype)
 	res.Headers["Content-Type"] = ctype
-	res.Headers["Connection"] = "keep-alive"
+	res.Headers["Connection"] = "close"
 	data, err := reader.ReadFile(req.SourceFolder + req.Path)
 	if err != nil {
 		res.StatusCode = http.StatusBadRequest

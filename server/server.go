@@ -119,6 +119,7 @@ func (s *Server) AddFileSystem(folderPath string) {
 		file = strings.ReplaceAll(file, "\\", "/")
 		s.router.Handle("GET", file, StreamHandler)
 	}
+	fmt.Println(s.router.Routes)
 }
 
 func (s *Server) Close() {
