@@ -17,7 +17,14 @@ const (
 )
 
 // Server
-// supports tcp connections/*
+/**
+Listens on a specified port on localhost:port with a net.Listener.
+After accepting a connection it then spawns a seperate go thread to handle the connection.
+It then parses the connection and puts it into a *parser.Request
+if the route exists in the router it follows it with http method aswell as the path being respected.
+There it finds a handler func that will format a Response this gets passed back to the serverm,
+which then formats it into a byte array and send the Response back to the client
+*/
 type Server struct {
 	port     int
 	listener net.Listener
@@ -55,6 +62,7 @@ func (s *Server) AcceptConnections() {
 		conn, err := s.listener.Accept()
 		if err != nil {
 			fmt.Printf("Error accepting conn: %s\n", err.Error())
+			continue
 		}
 		go handleConnection(conn, s)
 	}
@@ -83,6 +91,7 @@ func handleConnection(conn net.Conn, s *Server) {
 		if err != nil {
 			return
 		}
+		// HTTP/1.0  only supports close connections
 		if !(req.HTTPType == "HTTP/1.0" || req.Headers["Connection"] == "close") {
 			continue
 		}
@@ -119,7 +128,6 @@ func (s *Server) AddFileSystem(folderPath string) {
 		file = strings.ReplaceAll(file, "\\", "/")
 		s.router.Handle("GET", file, StreamHandler)
 	}
-	fmt.Println(s.router.Routes)
 }
 
 func (s *Server) Close() {
