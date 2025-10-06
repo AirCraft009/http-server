@@ -44,7 +44,7 @@ func checkErorr(err error) {
 	}
 }
 
-func NewServer(port int) *Server {
+func NewServer(port int, logging, verbose bool) *Server {
 	return &Server{port, net.Listener(nil), NewRouter()}
 }
 
@@ -128,6 +128,11 @@ func (s *Server) AddFileSystem(folderPath string) {
 		file = strings.ReplaceAll(file, "\\", "/")
 		s.router.Handle("GET", file, StreamHandler)
 	}
+}
+
+func (s *Server) ListenAndServe() {
+	s.Listen()
+	s.AcceptConnections()
 }
 
 func (s *Server) Close() {

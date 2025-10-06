@@ -19,7 +19,7 @@ func NewRouter() *Router {
 }
 
 func NewResponse(req *parser.Request) *Response {
-	return &Response{HTTPType: req.HTTPType, Headers: make(map[string]string)}
+	return &Response{HTTPType: req.HTTPType, Headers: make(map[string]string), StatusCode: -1}
 }
 
 type Handler func(request *parser.Request) *Response
@@ -44,7 +44,19 @@ func (r *Router) useRoute(route string, req *parser.Request) *Response {
 	if !ok {
 		return Http404Handler(req)
 	}
-	return handler(req)
+	return setBasicResponseHeaders(handler(req))
+}
+
+func setBasicResponseHeaders(response *Response) *Response {
+	// sets all params to a base if they haven't been set
+	if response.StatusCode == -1 {
+		response.StatusCode = 200
+	}
+	if _, ok := response.Headers["Content-Type"]; !ok {
+		response.Headers["Content-Type"] = "text/html; charset=utf-8"
+	}
+	response.Headers["Content-Lenght"] = strconv.Itoa(len(response.Body))
+	return response
 }
 
 func parseQuery(path string) (string, map[string]string) {

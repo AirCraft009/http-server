@@ -15,8 +15,6 @@
 **Using Builtin Handlers**
   - there are some builtin handlers like the base `Http404Handler()` 
     - it pulls 404.html from your sourcefolder if it doesn't exist it will only show a message
-  - there is also the base method `AddHttpHandler(path, filepath, Method string, response int)`
-    - this just adds an http handler that will serve the specified file on the specified path.
 
 **Custom Handlers**
   - configuring custom handlers is easy they leave you in full control of the response
