@@ -32,8 +32,14 @@ func ParseRequest(byteReq []byte) (*Request, error) {
 	it could be a file like an image or pdf.
 	*/
 	headerlen := strings.Index(req, "\r\n\r\n")
+	if headerlen == -1 {
+		return nil, errors.New("invalid syntax no header end")
+	}
 	lines := strings.Split(strings.ReplaceAll(req, "\n", ""), "\r")
 	word := strings.Split(lines[0], " ")
+	if len(word) != 3 {
+		return nil, errors.New("bad request")
+	}
 	//GET /request HTTP/1.1
 	//this parses the first line correctly
 	Method := word[0]
@@ -44,6 +50,9 @@ func ParseRequest(byteReq []byte) (*Request, error) {
 }
 
 func parseHeaders(headers []string) (out map[string]string) {
+	if len(headers) == 0 {
+		return map[string]string{}
+	}
 	out = make(map[string]string)
 	for _, header := range headers {
 		Pair := strings.Split(header, ": ")

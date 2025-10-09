@@ -74,7 +74,7 @@ func handleConnection(conn net.Conn, s *Server) {
 	for {
 		//min size for header 20B max 60B
 		message := make([]byte, maxHeaderSize)
-		//n is the ammount of bytes that are relevant so only header[n:] is important!!
+		//n is the ammount of bytes that are relevant so only header[:n] is important!!
 		n, err := conn.Read(message)
 		//break at EOF because it means the clien terminated the connection
 		if err == io.EOF {
@@ -85,7 +85,11 @@ func handleConnection(conn net.Conn, s *Server) {
 		//read everything up to n (inklusive)
 		//fmt.Println(string(header[:n]))
 		req, err := parser.ParseRequest(message[:n])
-		checkErorr(err)
+		if err != nil {
+			fmt.Printf("Error parsing request: %s closing connection\n", err.Error())
+			conn.Close()
+			return
+		}
 		response := s.router.useRoute(req.Path, req)
 		_, err = conn.Write(formatResponse(response))
 		if err != nil {
