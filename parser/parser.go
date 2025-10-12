@@ -1,6 +1,12 @@
+// Package parser
+//
+// used by the Package server to parse Requests
+// for that purposes it uses the Request struct
+// aswell as the ParseRequest Method
 package parser
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 )
@@ -21,21 +27,29 @@ func NewRequest(method, path, HTTPType string, headers map[string]string, body [
 	return &Request{method, path, HTTPType, headers, body, nil, ""}
 }
 
+// ParseRequest
+// parses a Request in byteform and returns *Request, err
+// it also checks the request for any malformed data (no end of header \r\n line)
+// this is used for handleConnection in server.AcceptConnections()
+// it doesn't handle chunked incoding or packets ariving out of sync.
+// to big for the scope of this project
 func ParseRequest(byteReq []byte) (*Request, error) {
 	req := string(byteReq)
 	if len(req) == 0 {
 		return nil, errors.New("empty request")
 	}
 	/**\r\n is an empty line and marks the body
-	because the header only uses ascii it perfectly matches up with a byte arrray.
-	Now I can pinpoint the start of the body which should stay in []byte format because
-	it could be a file like an image or pdf.
+	TODO: !! switched to using bytes.Index because even though the header should be ascii only
+	TODO: !! it could not be to not have issues I'll use bytes.Index
+	(because the header only uses ascii it perfectly matches up with a byte arrray.
+		Now I can pinpoint the start of the body which should stay in []byte format because
+		it could be a file like an image or pdf.)
 	*/
-	headerlen := strings.Index(req, "\r\n\r\n")
+	headerlen := bytes.Index(byteReq, []byte("\r\n\r\n"))
 	if headerlen == -1 {
 		return nil, errors.New("invalid syntax no header end")
 	}
-	lines := strings.Split(strings.ReplaceAll(req, "\n", ""), "\r")
+	lines := strings.Split(req, "\r\n")
 	word := strings.Split(lines[0], " ")
 	if len(word) != 3 {
 		return nil, errors.New("bad request")

@@ -25,9 +25,10 @@ func NewResponse(req *parser.Request) *Response {
 type Handler func(request *parser.Request) *Response
 
 // Handle
-/**
-sets a route in the router but doesn't support spaces in the path
-*/
+//
+//sets a route in the router but doesn't support spaces in the path
+//it takes the Method as in a string like GET POST PUT
+// and a path like(localhost:8080/front/gopher.jpg) aswell as a handler and routes any traffic on that route to this handler
 func (r *Router) Handle(Method, path string, handler Handler) {
 	if r.Routes[Method] == nil {
 		r.Routes[Method] = make(map[string]Handler)

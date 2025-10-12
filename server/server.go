@@ -1,3 +1,6 @@
+// Package server
+// contains the Server struct
+// a valid Server* can be returned by NewServer
 package server
 
 import (
@@ -17,14 +20,15 @@ const (
 )
 
 // Server
-/**
-Listens on a specified port on localhost:port with a net.Listener.
-After accepting a connection it then spawns a seperate go thread to handle the connection.
-It then parses the connection and puts it into a *parser.Request
-if the route exists in the router it follows it with http method aswell as the path being respected.
-There it finds a handler func that will format a Response this gets passed back to the serverm,
-which then formats it into a byte array and send the Response back to the client
-*/
+//
+// Listens on a specified port on localhost:port with a net.Listener.
+// After accepting a connection it then spawns a seperate go thread to handle the connection.
+//
+// It then parses the connection and puts it into a *parser.Request
+// if the route exists in the router it follows it with http method aswell as the path being respected.
+//
+// There it finds a handler func that will format a Response this gets passed back to the serverm,
+// which then formats it into a byte array and send the Response back to the client
 type Server struct {
 	port     int
 	listener net.Listener
@@ -44,16 +48,25 @@ func checkErorr(err error) {
 	}
 }
 
+// NewServer
+// Returns a valid Server*
 func NewServer(port int, logging, verbose bool) *Server {
 	return &Server{port, net.Listener(nil), NewRouter()}
 }
 
+// Listen
+// starts listening to incoming connections on the port specified in the Server struct
 func (s *Server) Listen() {
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(s.port))
 	checkErorr(err)
 	s.listener = listener
 }
 
+// AcceptConnections
+// accepts incoming connctions automatically calls listen,
+// if the net.Listener in the Server(s) is nil
+// it then accepts connections
+// then hands them of to a go-routine(handleConnection)
 func (s *Server) AcceptConnections() {
 	if s.listener == nil {
 		s.Listen()
@@ -112,15 +125,16 @@ func (s *Server) sendString(html string, conn net.Conn) {
 	checkErorr(err)
 }
 
+// Handle
+// a wrapper for the router.Handle function
 func (s *Server) Handle(Method, path string, handler Handler) {
 	s.router.Handle(Method, path, handler)
 }
 
 // AddFileSystem
-/**
-this method adds a folder and all folders under it to the filesystem of the server
-any requests the go from the basepath to any file in the system using a get Request can get pulled
-*/
+//
+// this method adds a folder and all folders under it to the filesystem of the server
+// any requests the go from the basepath to any file in the system using a get Request can get pulled
 func (s *Server) AddFileSystem(folderPath string) {
 	if strings.HasSuffix(folderPath, "/") {
 		folderPath = folderPath[:len(folderPath)-1]
