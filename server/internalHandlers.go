@@ -19,7 +19,7 @@ func Http404Handler(req *parser.Request) (res *Response) {
 	data, err := reader.ReadFile(req.SourceFolder + "/404.html")
 	if err != nil {
 		res.StatusCode = http.StatusBadRequest
-		res.Body = []byte("So bad that even 404 doesn't work")
+		res.Body = []byte("404 page not found")
 	} else {
 		res.Body = data
 	}
@@ -27,6 +27,10 @@ func Http404Handler(req *parser.Request) (res *Response) {
 	return res
 }
 
+// StreamHandler
+//
+// the StreamHandler is the basic handler used to stream any file
+// in the filesystem. Single paths can be overwritten aswell as the whole handler
 func StreamHandler(req *parser.Request) (res *Response) {
 	//the req.Path is cleaned up in router useRoute and now only contains the relevant info
 	pathParts := strings.Split(req.Path, "/")

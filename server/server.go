@@ -48,18 +48,22 @@ func checkErorr(err error) {
 	}
 }
 
+func (server *Server) overwrite404Handler(handler Handler) {
+	server.router.wrongpageHandler = handler
+}
+
 // NewServer
 // Returns a valid Server*
-func NewServer(port int, logging, verbose bool) *Server {
+func NewServer(port int) *Server {
 	return &Server{port, net.Listener(nil), NewRouter()}
 }
 
 // Listen
 // starts listening to incoming connections on the port specified in the Server struct
-func (s *Server) Listen() {
-	listener, err := net.Listen("tcp", ":"+strconv.Itoa(s.port))
+func (server *Server) Listen() {
+	listener, err := net.Listen("tcp", ":"+strconv.Itoa(server.port))
 	checkErorr(err)
-	s.listener = listener
+	server.listener = listener
 }
 
 // AcceptConnections
@@ -67,17 +71,17 @@ func (s *Server) Listen() {
 // if the net.Listener in the Server(s) is nil
 // it then accepts connections
 // then hands them of to a go-routine(handleConnection)
-func (s *Server) AcceptConnections() {
-	if s.listener == nil {
-		s.Listen()
+func (server *Server) AcceptConnections() {
+	if server.listener == nil {
+		server.Listen()
 	}
 	for {
-		conn, err := s.listener.Accept()
+		conn, err := server.listener.Accept()
 		if err != nil {
 			fmt.Printf("Error accepting conn: %s\n", err.Error())
 			continue
 		}
-		go handleConnection(conn, s)
+		go handleConnection(conn, server)
 	}
 }
 
@@ -120,40 +124,51 @@ func handleConnection(conn net.Conn, s *Server) {
 	}
 }
 
-func (s *Server) sendString(html string, conn net.Conn) {
+func (server *Server) sendString(html string, conn net.Conn) {
 	_, err := conn.Write([]byte(html))
 	checkErorr(err)
 }
 
 // Handle
 // a wrapper for the router.Handle function
-func (s *Server) Handle(Method, path string, handler Handler) {
-	s.router.Handle(Method, path, handler)
+func (server *Server) Handle(Method, path string, handler Handler) {
+	server.router.Handle(Method, path, handler)
+}
+
+// AddFileSystemWithHandler
+//
+// functions the same as AddFileSystem, except the fact that you can add
+// a custom handler to overwrite the base StreamHandler.
+//
+// you can also overwrite a single path by just using the AddFileSystem and only using Handle on
+// a few Paths
+func (server *Server) AddFileSystemWithHandler(folderPath string, handler Handler) {
+	if strings.HasSuffix(folderPath, "/") {
+		folderPath = folderPath[:len(folderPath)-1]
+	}
+	server.router.sourceFolder = folderPath
+	files := listFiles(folderPath)
+	for _, file := range files {
+		file = strings.Replace(file, folderPath, "", 1)
+		file = strings.ReplaceAll(file, "\\", "/")
+		server.router.Handle("GET", file, handler)
+	}
 }
 
 // AddFileSystem
 //
 // this method adds a folder and all folders under it to the filesystem of the server
-// any requests the go from the basepath to any file in the system using a get Request can get pulled
-func (s *Server) AddFileSystem(folderPath string) {
-	if strings.HasSuffix(folderPath, "/") {
-		folderPath = folderPath[:len(folderPath)-1]
-	}
-	s.router.sourceFolder = folderPath
-	files := listFiles(folderPath)
-	for _, file := range files {
-		file = strings.Replace(file, folderPath, "", 1)
-		file = strings.ReplaceAll(file, "\\", "/")
-		s.router.Handle("GET", file, StreamHandler)
-	}
+// any requests the go from the basepath to any file in the system using a GET Request can get pulled
+func (server *Server) AddFileSystem(folderPath string) {
+	server.AddFileSystemWithHandler(folderPath, Http404Handler)
 }
 
-func (s *Server) ListenAndServe() {
-	s.Listen()
-	s.AcceptConnections()
+func (server *Server) ListenAndServe() {
+	server.Listen()
+	server.AcceptConnections()
 }
 
-func (s *Server) Close() {
-	err := s.listener.Close()
+func (server *Server) Close() {
+	err := server.listener.Close()
 	checkErorr(err)
 }

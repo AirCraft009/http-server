@@ -18,13 +18,34 @@ type Request struct {
 	Headers  map[string]string
 	Body     []byte
 	//field that will only be filled later
-	Querys       map[string]string
+	Queries      map[string]string
 	SourceFolder string
 }
 
 func NewRequest(method, path, HTTPType string, headers map[string]string, body []byte) *Request {
 	//currently all queries are in the path variable of the request they will be parsed later
 	return &Request{method, path, HTTPType, headers, body, nil, ""}
+}
+
+func (request *Request) GetQuery(key string) (value string, err error) {
+	if data, ok := request.Queries[key]; ok {
+		return data, nil
+	}
+	return "", errors.New(key + " not found")
+}
+
+func (request *Request) GetHeader(key string) (value string, err error) {
+	if data, ok := request.Headers[key]; ok {
+		return data, nil
+	}
+	return "", errors.New(key + " not found")
+}
+
+func (request *Request) GetBody() (body []byte, err error) {
+	if request.Body != nil {
+		return request.Body, nil
+	}
+	return nil, errors.New("no body")
 }
 
 // ParseRequest
@@ -56,9 +77,7 @@ func ParseRequest(byteReq []byte) (*Request, error) {
 	}
 	//GET /request HTTP/1.1
 	//this parses the first line correctly
-	Method := word[0]
-	Path := word[1]
-	Http := word[2]
+	Method, Path, Http := word[0], word[1], word[2]
 	headers := parseHeaders(lines[1:])
 	return NewRequest(Method, Path, Http, headers, byteReq[headerlen:]), nil
 }

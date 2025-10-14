@@ -4,17 +4,13 @@ import (
 	"http-server/parser"
 	"http-server/server"
 	"net/http"
-	"strconv"
 )
 
 func Homehandler(req *parser.Request) (res *server.Response) {
 	res = server.NewResponse(req)
-	res.HTTPType = req.HTTPType
 	res.StatusCode = http.StatusOK
-	res.Headers = make(map[string]string)
-	res.Headers["Content-Type"] = "text/html; charset=utf-8"
-	res.Headers["Connection"] = "keep-alive"
-	res.Body = []byte("Hello World")
-	res.Headers["Content-Lenght"] = strconv.Itoa(len(res.Body))
+	res.AddHeader("Content-Type", "text/html; charset=utf-8")
+	res.AddHeader("Connection", "keep-alive")
+	res.SetBody([]byte("Hello World"))
 	return res
 }

@@ -7,7 +7,7 @@ import (
 
 func main() {
 	httpServer := server.NewServer(8080, true, true)
-	httpServer.AddFileSystem("frontend")
+	httpServer.AddFileSystem("examplefile/frontend")
 	httpServer.Handle("GET", "/", handlers.Homehandler)
 	httpServer.ListenAndServe()
 }

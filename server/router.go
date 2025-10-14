@@ -10,12 +10,13 @@ import (
 
 type Router struct {
 	// Routes Method -> route -> Handler
-	Routes       map[string]map[string]Handler
-	sourceFolder string
+	Routes           map[string]map[string]Handler
+	sourceFolder     string
+	wrongpageHandler Handler
 }
 
 func NewRouter() *Router {
-	return &Router{Routes: make(map[string]map[string]Handler)}
+	return &Router{Routes: make(map[string]map[string]Handler), wrongpageHandler: Http404Handler}
 }
 
 func NewResponse(req *parser.Request) *Response {
@@ -26,8 +27,8 @@ type Handler func(request *parser.Request) *Response
 
 // Handle
 //
-//sets a route in the router but doesn't support spaces in the path
-//it takes the Method as in a string like GET POST PUT
+// sets a route in the router but doesn't support spaces in the path
+// it takes the Method as in a string like GET POST PUT
 // and a path like(localhost:8080/front/gopher.jpg) aswell as a handler and routes any traffic on that route to this handler
 func (r *Router) Handle(Method, path string, handler Handler) {
 	if r.Routes[Method] == nil {
@@ -38,12 +39,12 @@ func (r *Router) Handle(Method, path string, handler Handler) {
 
 func (r *Router) useRoute(route string, req *parser.Request) *Response {
 	rawPath, queryMap := parseQuery(route)
-	req.Querys = queryMap
+	req.Queries = queryMap
 	req.Path = rawPath
 	req.SourceFolder = r.sourceFolder
 	handler, ok := r.Routes[req.Method][rawPath]
 	if !ok {
-		return Http404Handler(req)
+		return r.wrongpageHandler(req)
 	}
 	return setBasicResponseHeaders(handler(req))
 }
